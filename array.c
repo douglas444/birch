@@ -153,3 +153,10 @@ void array_clear(Array *array)
         array_remove_by_index(array, 0);
     }
 }
+
+Integer* new_integer(int value)
+{
+    Integer* integer = (Integer*) smalloc(sizeof(Integer));
+    integer->value = value;
+    return integer;
+}

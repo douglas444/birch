@@ -1,14 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include "birch.h"
 #include "array.h"
 #include "smem.h"
+
+#define INDEXES_INITIAL_SIZE 4
 
 struct node {
     Array *entries;
     int branching_factor;
     double threshold;
     bool is_leaf;
+    double (*distance)(struct entry*, struct entry*);
     struct node *next_leaf;
     struct node *prev_lead;
 };
@@ -25,6 +29,46 @@ struct entry {
 
 typedef struct entry Entry;
 typedef struct node Node;
+
+Entry* new_entry_default()
+{
+    Entry* entry = (Entry*) smalloc(sizeof(Entry));
+
+    entry->dim = 0;
+    entry->n = 0;
+    entry->ls = NULL;
+    entry->ss = NULL;
+    entry->child = NULL;
+    entry->indexes = NULL;
+    entry->subcluster_id = -1;
+
+    return entry;
+}
+
+Entry* new_entry(double *x, int dim, int index)
+{
+    int i;
+
+    Entry *entry = new_entry_default();
+
+    entry->n = 1;
+    entry->dim = dim;
+
+    entry->ls = (double*) smalloc(sizeof(double));
+    smemcpy(entry->ls, x, entry->dim);
+
+    entry->ss = (double*) smalloc(sizeof(double));
+    for (i = 0; i < entry->dim; i++)
+    {
+        entry->ss[i] = entry->ls[i] * entry->ls[i];
+    }
+
+    entry->indexes = array_new(INDEXES_INITIAL_SIZE);
+    array_add(entry->indexes, new_integer(index));
+
+    return entry;
+
+}
 
 void update_entry(Entry *e1, Entry *e2)
 {
@@ -69,4 +113,16 @@ void update_entry(Entry *e1, Entry *e2)
     }
 }
 
+bool is_within_threshold(Entry *e1, Entry *e2, double threshold, double (*distance)(Entry*, Entry*))
+{
+    double dist = distance(e1, e2);
 
+    if(dist == 0 || dist <= threshold)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
