@@ -50,6 +50,7 @@ struct tree
 typedef struct entry Entry;
 typedef struct node Node;
 typedef struct pentry PEntry;
+typedef struct tree Tree;
 
 Entry* create_default_entry()
 {
@@ -532,7 +533,7 @@ bool insert_entry(Node* node, Entry* entry) {
             { // splitting stops at this node
                 if(node->apply_merging_refinement)
                 { // performs step 4 of insert process (see BIRCH paper, Section 4.3)
-                    //merging_refinement(split_pair);
+                    merging_refinement(split_pair);
                 }
                 return true;
             }
@@ -557,4 +558,114 @@ bool insert_entry(Node* node, Entry* entry) {
         return false;   // returns false so that the parent entry will be split
     }
 
+}
+
+void merging_refinement(Node* node, PEntry* split_entries)
+{
+
+    Node* old_node_1;
+    Node* old_node_2;
+    Node* new_node_1;
+    Node* new_node_2;
+    Node* new_node;
+    Node* dummy_node;
+    PEntry* pentry;
+    Array* old_node_1_entries;
+    Array* old_node_2_entries;
+    Array* node_entries;
+    Entry* new_entry_1;
+    Entry* new_entry_2;
+    Entry* new_entry;
+
+    node_entries = node->entries;
+    pentry = find_closest_entry_pair(node_entries, node->distance);
+
+    if (pentry == NULL)
+    { // not possible to find a valid pair
+        return;
+    }
+
+    if (pentry_cmp(pentry, split_entries))
+    {
+        return; // if the closet pair is the one that was just split, we terminate
+    }
+
+    old_node_1 = pentry->e1->child;
+    old_node_2 = pentry->e2->child;
+
+    old_node_1_entries = old_node_1->entries;
+    old_node_2_entries = old_node_2->entries;
+
+    if(old_node_1->is_leaf != old_node_2->is_leaf) { // just to make sure everything is going ok
+        printf("ERROR: birch.c/merging_refinement(): \"Nodes at the same level must have same leaf status\"\n");
+        exit(1);
+    }
+
+    if((array_size(old_node_1_entries) + array_size(old_node_2_entries)) > node->branching_factor) {
+        // the two nodes cannot be merged into one (they will not fit)
+        // in this case we simply redistribute them between p.e1 and p.e2
+
+        new_entry_1 = create_default_entry();
+        // note: in the CFNode construction below the last parameter is false
+        // because a split cannot happen at the leaf level
+        // (the only exception is when the root is first split, but that's treated separately)
+        new_node_1 = old_node_1;
+        array_clear(new_node_1->entries);
+        new_entry_1->child = new_node_1;
+
+        new_entry_2 = create_default_entry();
+        new_node_2 = old_node_2;
+        array_clear(new_node_2->entries);
+        new_entry_2->child = new_node_2;
+
+        /**/redistribute_entries(node, old_node_1_entries, old_node_2_entries, pentry, new_entry_1, new_entry_2);
+        /**/replace_closest_pair_with_new_entries(pentry, new_entry_1, new_entry_2);
+
+    }
+    else {
+        // if the the two closest entries can actually be merged into one single entry
+
+        new_entry = create_default_entry();
+        // note: in the CFNode construction below the last parameter is false
+        // because a split cannot happen at the leaf level
+        // (the only exception is when the root is first split, but that's treated separately)
+        new_node = create_node(node->branching_factor, node->threshold, node->distance, node->apply_merging_refinement, old_node_1->is_leaf);
+        new_entry->child = new_node;
+
+        /**/redistribute_entries(node, old_node_1_entries, old_node_2_entries, new_entry);
+
+        if (old_node_1->is_leaf && old_node_2->is_leaf)
+        { // this is done to maintain proper links in the leafList
+            if(old_node_1->prev_leaf != NULL)
+            {
+                old_node_1->prev_leaf->next_leaf = new_node;
+            }
+            if(old_node_1->next_leaf != NULL)
+            {
+                old_node_1->next_leaf->prev_leaf = new_node;
+            }
+            new_node->prev_leaf = old_node_1->prev_leaf;
+            new_node->next_leaf = old_node_1->next_leaf;
+
+            // this is a dummy node that is only used to maintain proper links in the leafList
+            // no CFEntry will ever point to this leaf
+            dummy_node = create_node(0, 0, NULL, true, false);
+
+            if (old_node_2->prev_leaf != NULL)
+            {
+                old_node_2->prev_leaf->next_leaf = dummy_node;
+            }
+            if (old_node_2->next_leaf != NULL)
+            {
+                old_node_2->next_leaf->prev_leaf = dummy_node;
+            }
+
+            dummy_node->prev_leaf = old_node_2->prev_leaf;
+            dummy_node->next_leaf = old_node_2->next_leaf;
+        }
+
+        /**/replace_closest_pair_with_new_merged_entry(pentry, new_entry);
+    }
+
+    // merging refinement is done
 }
