@@ -225,6 +225,24 @@ PEntry* create_pentry(Entry* e1, Entry* e2)
     return pentry;
 }
 
+bool entry_cmp(Entry *e1, Entry *e2)
+{
+    if (e1->child == e2->child &&
+        e1->dim == e2->dim &&
+        e1->indexes == e2->indexes &&
+        e1->ls == e2->ls &&
+        e1->n == e2->n &&
+        e1->ss == e2->ss &&
+        e1->subcluster_id == e2->subcluster_id)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 bool pentry_cmp(PEntry* p1, PEntry* p2)
 {
     if (p1->e1 == p2->e1 && p1->e2 == p1->e2)
@@ -424,6 +442,85 @@ void redistribute_entries(Node* node, Array* old_entries, PEntry *far_entries, E
     }
 }
 
+void redistribute_entries_double
+(
+    Node* node,
+    Array* old_entries_1,
+    Array* old_entries_2,
+    PEntry* close_entries,
+    Entry* new_entry_1,
+    Entry* new_entry_2
+)
+{
+    int i;
+    Array* v;
+    Entry* curr_entry;
+    double dist_1;
+    double dist_2;
+
+    v = array_new(node->branching_factor * 2);
+    array_add_all(v, old_entries_1);
+    array_add_all(v, old_entries_2);
+
+    for (i = 0; i < array_size(v); ++i)
+    {
+        curr_entry = array_get(v, i);
+        dist_1 = node->distance(close_entries->e1, curr_entry);
+        dist_2 = node->distance(close_entries->e2, curr_entry);
+
+        if (dist_1 <= dist_2)
+        {
+            if(array_size(new_entry_1->child->entries) < node->branching_factor)
+            {
+                array_add(new_entry_1->child->entries, curr_entry);
+                update_entry(new_entry_1, curr_entry);
+            }
+            else
+            {
+                array_add(new_entry_2->child->entries, curr_entry);
+                update_entry(new_entry_2, curr_entry);
+            }
+        }
+        else if(dist_2 < dist_1)
+        {
+            if(array_size(new_entry_2->child->entries) < node->branching_factor)
+            {
+                array_add(new_entry_2->child->entries, curr_entry);
+                update_entry(new_entry_2, curr_entry);
+            }
+            else
+            {
+                array_add(new_entry_1->child->entries, curr_entry);
+                update_entry(new_entry_1, curr_entry);
+            }
+        }
+    }
+}
+
+void redistribute_entries_merge
+(
+    Node *node,
+    Array* old_entries_1,
+    Array* old_entries_2,
+    Entry* new_entry
+)
+{
+    int i;
+    Array* v;
+    Entry* curr_entry;
+
+    v = array_new(node->branching_factor);
+    array_add_all(v, old_entries_1);
+    array_add_all(v, old_entries_2);
+
+    for (i = 0; i < array_size(v); ++i)
+    {
+        curr_entry = array_get(v, i);
+        array_add(new_entry->child->entries, curr_entry);
+        update_entry(new_entry, curr_entry);
+    }
+}
+
 PEntry* split_entry(Node* node, Entry* closest_entry)
 {
     // IF there was a child, but we could not insert the new entry without problems THAN
@@ -492,72 +589,38 @@ PEntry* split_entry(Node* node, Entry* closest_entry)
     return new_pair;
 }
 
-bool insert_entry(Node* node, Entry* entry) {
+void replace_closest_pair_with_new_entries(Node *node, PEntry* pentry, Entry* new_entry_1, Entry* new_entry_2)
+{
+    int i;
 
-    Entry* closest_entry;
-    bool dont_split;
-    PEntry* split_pair;
-
-    if(array_size(node->entries) == 0)
+    for (i = 0; i < array_size(node->entries); i++)
     {
-        array_add(node->entries, entry);
-        return true;
-    }
-
-    closest_entry = find_closest_entry(node, entry);
-    dont_split = false;
-
-    if(closest_entry->child != NULL)
-    {
-        dont_split = insert_entry(closest_entry->child, entry);
-
-        if(dont_split == true)
+        if(entry_cmp(array_get(node->entries, i), pentry->e1) == true)
         {
-            update_entry(closest_entry, entry); // this updates the CF to reflect the additional entry
-            return true;
+            array_set(node->entries, i, new_entry_1);
         }
-        else
+        else if(entry_cmp(array_get(node->entries, i), pentry->e2) == true)
         {
-            // if the node below /closest/ didn't have enough room to host the new entry
-            // we need to split it
-            split_pair = split_entry(node, closest_entry);
-
-            // after adding the new entries derived from splitting /closest/ to this node,
-            // if we have more than maxEntries we return false,
-            // so that the parent node will be split as well to redistribute the "load"
-            if(array_size(node->entries) > node->branching_factor)
-            {
-                return false;
-            }
-            else
-            { // splitting stops at this node
-                if(node->apply_merging_refinement)
-                { // performs step 4 of insert process (see BIRCH paper, Section 4.3)
-                    merging_refinement(split_pair);
-                }
-                return true;
-            }
+            array_set(node->entries, i, new_entry_2);
         }
     }
-    else if(is_within_threshold(closest_entry, entry, node->threshold, node->distance))
-    {
-        // if  dist(closest,e) <= T, /e/ will be "absorbed" by /closest/
-        update_entry(closest_entry, entry);
-        return true; // no split necessary at the parent level
-    }
-    else if(array_size(node->entries) < node->branching_factor)
-    {
-        // if /closest/ does not have children, and dist(closest,e) > T
-        // if there is enough room in this node, we simply add e to it
-        array_add(node->entries, entry);
-        return true; // no split necessary at the parent level
-    }
-    else
-    { // not enough space on this node
-        array_add(node->entries, entry); // adds it momentarily to this node
-        return false;   // returns false so that the parent entry will be split
-    }
+}
 
+void replace_closest_pair_with_new_merged_entry(Node* node, PEntry* pentry, Entry* new_entry)
+{
+    int i;
+
+    for (i = 0; i < array_size(node->entries); i++)
+    {
+        if (entry_cmp(array_get(node->entries, i), pentry->e1) == true)
+        {
+            array_set(node->entries, i, new_entry);
+        }
+        else if (entry_cmp(array_get(node->entries, i), pentry->e2) == true)
+        {
+            array_remove_by_index(node->entries, i);
+        }
+    }
 }
 
 void merging_refinement(Node* node, PEntry* split_entries)
@@ -569,13 +632,13 @@ void merging_refinement(Node* node, PEntry* split_entries)
     Node* new_node_2;
     Node* new_node;
     Node* dummy_node;
-    PEntry* pentry;
     Array* old_node_1_entries;
     Array* old_node_2_entries;
     Array* node_entries;
     Entry* new_entry_1;
     Entry* new_entry_2;
     Entry* new_entry;
+    PEntry* pentry;
 
     node_entries = node->entries;
     pentry = find_closest_entry_pair(node_entries, node->distance);
@@ -618,11 +681,11 @@ void merging_refinement(Node* node, PEntry* split_entries)
         array_clear(new_node_2->entries);
         new_entry_2->child = new_node_2;
 
-        /**/redistribute_entries(node, old_node_1_entries, old_node_2_entries, pentry, new_entry_1, new_entry_2);
-        /**/replace_closest_pair_with_new_entries(pentry, new_entry_1, new_entry_2);
-
+        redistribute_entries_double(node, old_node_1_entries, old_node_2_entries, pentry, new_entry_1, new_entry_2);
+        /**/replace_closest_pair_with_new_entries(node, pentry, new_entry_1, new_entry_2);
     }
-    else {
+    else
+    {
         // if the the two closest entries can actually be merged into one single entry
 
         new_entry = create_default_entry();
@@ -632,7 +695,7 @@ void merging_refinement(Node* node, PEntry* split_entries)
         new_node = create_node(node->branching_factor, node->threshold, node->distance, node->apply_merging_refinement, old_node_1->is_leaf);
         new_entry->child = new_node;
 
-        /**/redistribute_entries(node, old_node_1_entries, old_node_2_entries, new_entry);
+        redistribute_entries_merge(node, old_node_1_entries, old_node_2_entries, new_entry);
 
         if (old_node_1->is_leaf && old_node_2->is_leaf)
         { // this is done to maintain proper links in the leafList
@@ -664,8 +727,76 @@ void merging_refinement(Node* node, PEntry* split_entries)
             dummy_node->next_leaf = old_node_2->next_leaf;
         }
 
-        /**/replace_closest_pair_with_new_merged_entry(pentry, new_entry);
+        replace_closest_pair_with_new_merged_entry(node, pentry, new_entry);
     }
 
     // merging refinement is done
+}
+
+bool insert_entry(Node* node, Entry* entry) {
+
+    Entry* closest_entry;
+    bool dont_split;
+    PEntry* split_pair;
+
+    if(array_size(node->entries) == 0)
+    {
+        array_add(node->entries, entry);
+        return true;
+    }
+
+    closest_entry = find_closest_entry(node, entry);
+    dont_split = false;
+
+    if(closest_entry->child != NULL)
+    {
+        dont_split = insert_entry(closest_entry->child, entry);
+
+        if(dont_split == true)
+        {
+            update_entry(closest_entry, entry); // this updates the CF to reflect the additional entry
+            return true;
+        }
+        else
+        {
+            // if the node below /closest/ didn't have enough room to host the new entry
+            // we need to split it
+            split_pair = split_entry(node, closest_entry);
+
+            // after adding the new entries derived from splitting /closest/ to this node,
+            // if we have more than maxEntries we return false,
+            // so that the parent node will be split as well to redistribute the "load"
+            if(array_size(node->entries) > node->branching_factor)
+            {
+                return false;
+            }
+            else
+            { // splitting stops at this node
+                if(node->apply_merging_refinement)
+                { // performs step 4 of insert process (see BIRCH paper, Section 4.3)
+                    merging_refinement(node, split_pair);
+                }
+                return true;
+            }
+        }
+    }
+    else if(is_within_threshold(closest_entry, entry, node->threshold, node->distance))
+    {
+        // if  dist(closest,e) <= T, /e/ will be "absorbed" by /closest/
+        update_entry(closest_entry, entry);
+        return true; // no split necessary at the parent level
+    }
+    else if(array_size(node->entries) < node->branching_factor)
+    {
+        // if /closest/ does not have children, and dist(closest,e) > T
+        // if there is enough room in this node, we simply add e to it
+        array_add(node->entries, entry);
+        return true; // no split necessary at the parent level
+    }
+    else
+    { // not enough space on this node
+        array_add(node->entries, entry); // adds it momentarily to this node
+        return false;   // returns false so that the parent entry will be split
+    }
+
 }
