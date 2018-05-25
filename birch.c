@@ -271,7 +271,7 @@ Entry* find_closest_entry(Node *node, Entry* entry)
 
     for (i = 0; i < array_size(node->entries); ++i)
     {
-        curr_entry = array_get(node->entries, i);
+        curr_entry = (Entry*) array_get(node->entries, i);
         curr_dist = node->distance(curr_entry, entry);
 
         if (curr_dist < min_dist)
@@ -284,7 +284,11 @@ Entry* find_closest_entry(Node *node, Entry* entry)
     return closest_entry;
 }
 
-PEntry* find_farthest_entry_pair(Array* entries, double (*distance)(struct entry*, struct entry*))
+PEntry* find_farthest_entry_pair
+(
+    Array* entries,
+    double (*distance)(struct entry*, struct entry*)
+)
 {
     int i, j;
     double max_dist;
@@ -305,8 +309,8 @@ PEntry* find_farthest_entry_pair(Array* entries, double (*distance)(struct entry
     {
         for (j = i + 1; j < array_size(entries); ++j)
         {
-            e1 = array_get(entries, i);
-            e2 = array_get(entries, j);
+            e1 = (Entry*) array_get(entries, i);
+            e2 = (Entry*) array_get(entries, j);
 
             curr_dist = distance(e1, e2);
 
@@ -322,7 +326,11 @@ PEntry* find_farthest_entry_pair(Array* entries, double (*distance)(struct entry
     return pentry;
 }
 
-PEntry* find_closest_entry_pair(Array* entries, double (*distance)(struct entry*, struct entry*))
+PEntry* find_closest_entry_pair
+(
+    Array* entries,
+    double (*distance)(struct entry*, struct entry*)
+)
 {
     int i, j;
     double min_dist;
@@ -343,8 +351,8 @@ PEntry* find_closest_entry_pair(Array* entries, double (*distance)(struct entry*
     {
         for (j = i + 1; j < array_size(entries); ++j)
         {
-            e1 = array_get(entries, i);
-            e2 = array_get(entries, j);
+            e1 = (Entry*) array_get(entries, i);
+            e2 = (Entry*) array_get(entries, j);
 
             curr_dist = distance(e1, e2);
 
@@ -370,7 +378,7 @@ int count_children_nodes(Node* node)
 
     for (i = 0; i < array_size(node->entries); ++i)
     {
-        curr_entry = array_get(node->entries, i);
+        curr_entry = (Entry*) array_get(node->entries, i);
 
         if (curr_entry->child != NULL)
         {
@@ -392,7 +400,7 @@ int count_entries_in_children_nodes(Node* node)
 
     for (i = 0; i < array_size(node->entries); ++i)
     {
-        curr_entry = array_get(node->entries, i);
+        curr_entry = (Entry*) array_get(node->entries, i);
 
         if (curr_entry->child != NULL)
         {
@@ -416,7 +424,14 @@ int find_closest_subcluster(Node* node, Entry* entry)
     return find_closest_subcluster(closest_entry->child, entry);
 }
 
-void redistribute_entries(Node* node, Array* old_entries, PEntry *far_entries, Entry* new_entry_1, Entry* new_entry_2)
+void redistribute_entries
+(
+    Node* node,
+    Array* old_entries,
+    PEntry *far_entries,
+    Entry* new_entry_1,
+    Entry* new_entry_2
+)
 {
     int i;
     double dist_1;
@@ -425,7 +440,7 @@ void redistribute_entries(Node* node, Array* old_entries, PEntry *far_entries, E
 
     for (i = 0; i < array_size(old_entries); ++i)
     {
-        curr_entry = array_get(old_entries, i);
+        curr_entry = (Entry*) array_get(old_entries, i);
         dist_1 = node->distance(far_entries->e1, curr_entry);
         dist_2 = node->distance(far_entries->e2, curr_entry);
 
@@ -464,7 +479,7 @@ void redistribute_entries_double
 
     for (i = 0; i < array_size(v); ++i)
     {
-        curr_entry = array_get(v, i);
+        curr_entry = (Entry*) array_get(v, i);
         dist_1 = node->distance(close_entries->e1, curr_entry);
         dist_2 = node->distance(close_entries->e2, curr_entry);
 
@@ -515,7 +530,7 @@ void redistribute_entries_merge
 
     for (i = 0; i < array_size(v); ++i)
     {
-        curr_entry = array_get(v, i);
+        curr_entry = (Entry*) array_get(v, i);
         array_add(new_entry->child->entries, curr_entry);
         update_entry(new_entry, curr_entry);
     }
@@ -589,34 +604,45 @@ PEntry* split_entry(Node* node, Entry* closest_entry)
     return new_pair;
 }
 
-void replace_closest_pair_with_new_entries(Node *node, PEntry* pentry, Entry* new_entry_1, Entry* new_entry_2)
+void replace_closest_pair_with_new_entries
+(
+    Node *node,
+    PEntry* pentry,
+    Entry* new_entry_1,
+    Entry* new_entry_2
+)
 {
     int i;
 
     for (i = 0; i < array_size(node->entries); i++)
     {
-        if(entry_cmp(array_get(node->entries, i), pentry->e1) == true)
+        if(entry_cmp((Entry*) array_get(node->entries, i), pentry->e1) == true)
         {
             array_set(node->entries, i, new_entry_1);
         }
-        else if(entry_cmp(array_get(node->entries, i), pentry->e2) == true)
+        else if(entry_cmp((Entry*) array_get(node->entries, i), pentry->e2) == true)
         {
             array_set(node->entries, i, new_entry_2);
         }
     }
 }
 
-void replace_closest_pair_with_new_merged_entry(Node* node, PEntry* pentry, Entry* new_entry)
+void replace_closest_pair_with_new_merged_entry
+(
+    Node* node,
+    PEntry* pentry,
+    Entry* new_entry
+)
 {
     int i;
 
     for (i = 0; i < array_size(node->entries); i++)
     {
-        if (entry_cmp(array_get(node->entries, i), pentry->e1) == true)
+        if (entry_cmp((Entry*) array_get(node->entries, i), pentry->e1) == true)
         {
             array_set(node->entries, i, new_entry);
         }
-        else if (entry_cmp(array_get(node->entries, i), pentry->e2) == true)
+        else if (entry_cmp((Entry*) array_get(node->entries, i), pentry->e2) == true)
         {
             array_remove_by_index(node->entries, i);
         }
@@ -799,4 +825,21 @@ bool insert_entry(Node* node, Entry* entry) {
         return false;   // returns false so that the parent entry will be split
     }
 
+}
+
+Tree* create_tree
+(
+    int branching_factor,
+    double threshold,
+    double (*distance)(struct entry*, struct entry*),
+    bool apply_merging_refinement
+)
+{
+    Tree* tree;
+    tree = (Tree*) smalloc(sizeof(Tree));
+
+    tree->root = create_node(branching_factor, threshold, distance, true, apply_merging_refinement);
+    tree->leaf_list = create_node(branching_factor, threshold, distance, true, apply_merging_refinement);
+    tree->leaf_list->next_leaf = tree->root;
+    return tree;
 }
