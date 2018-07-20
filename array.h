@@ -18,6 +18,5 @@ void array_add_all(Array *dest, Array *src);
 Array* array_clone(Array *array);
 size_t array_size(Array *array);
 void array_clear(Array *array);
-
 Integer* new_integer(int value);
-
+void array_deep_clear(Array *array);

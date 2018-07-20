@@ -154,6 +154,20 @@ void array_clear(Array *array)
     }
 }
 
+void array_deep_clear(Array *array)
+{
+    int i;
+    int size;
+    void *pointer;
+
+    size = array->used;
+    for (i = 0; i < size; ++i)
+    {
+        pointer = array_remove_by_index(array, 0);
+        free(pointer);
+    }
+}
+
 Integer* new_integer(int value)
 {
     Integer* integer = (Integer*) smalloc(sizeof(Integer));

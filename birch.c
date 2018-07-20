@@ -47,19 +47,14 @@ struct tree
     long periodic_limit_check;
 };
 
-typedef struct entry Entry;
-typedef struct node Node;
-typedef struct pentry PEntry;
-typedef struct tree Tree;
-
-Entry* create_default_entry()
+Entry* create_default_entry(int dim)
 {
     Entry* entry = (Entry*) smalloc(sizeof(Entry));
 
-    entry->dim = 0;
+    entry->dim = dim;
     entry->n = 0;
-    entry->ls = NULL;
-    entry->ss = NULL;
+    entry->ls = (double*) smalloc(sizeof(double) * dim);
+    entry->ss = (double*) smalloc(sizeof(double) * dim);
     entry->child = NULL;
     entry->indexes = NULL;
     entry->subcluster_id = -1;
@@ -76,15 +71,13 @@ Entry* create_entry
 {
     int i;
 
-    Entry* entry = create_default_entry();
+    Entry* entry = create_default_entry(dim);
 
     entry->n = 1;
     entry->dim = dim;
 
-    entry->ls = (double*) smalloc(sizeof(double));
     smemcpy(entry->ls, x, entry->dim);
 
-    entry->ss = (double*) smalloc(sizeof(double));
     for (i = 0; i < entry->dim; i++)
     {
         entry->ss[i] = entry->ls[i] * entry->ls[i];
@@ -101,18 +94,37 @@ void free_entry(Entry *entry)
 {
     entry->dim = 0;
     entry->n = 0;
+
+    Node* p = (Node*) 0x6054e0;
+    if (entry->child == p)
+    {
+        printf("opa");
+    }
+
     if (entry->ls != NULL)
     {
         free(entry->ls);
     }
+
     if (entry->ss != NULL)
     {
         free(entry->ss);
     }
-    array_free(entry->indexes);
+
+    if (entry->indexes != NULL)
+    {
+        array_free(entry->indexes);
+    }
+
     free(entry);
 
 }
+
+void free_node(Node *node)
+{
+    array_free(node->entries);
+    free(node);
+};
 
 void update_entry(Entry *e1, Entry *e2)
 {
@@ -155,6 +167,7 @@ void update_entry(Entry *e1, Entry *e2)
             e1->indexes = array_clone(e2->indexes);
         }
     }
+
 }
 
 bool is_within_threshold
@@ -556,11 +569,11 @@ PEntry* split_entry(Node* node, Entry* closest_entry)
     old_entries = closest_entry->child->entries;
     farthest_pair = find_farthest_entry_pair(old_entries, node->distance);
 
-    new_entry_1 = create_default_entry();
+    new_entry_1 = create_default_entry(closest_entry->dim);
     new_node_1 = create_node(node->branching_factor, node->threshold, node->distance, old_node->is_leaf, node->apply_merging_refinement);
     new_entry_1->child = new_node_1;
 
-    new_entry_2 = create_default_entry();
+    new_entry_2 = create_default_entry(closest_entry->dim);
     new_node_2 = create_node(node->branching_factor, node->threshold, node->distance, old_node->is_leaf, node->apply_merging_refinement);
     new_entry_2->child = new_node_2;
 
@@ -587,12 +600,20 @@ PEntry* split_entry(Node* node, Entry* closest_entry)
         new_node_2->next_leaf = next;
     }
 
-
     redistribute_entries(node, old_entries, farthest_pair, new_entry_1, new_entry_2);
     // redistributes the entries in n between newEntry1 and newEntry2
     // according to the distance to p.e1 and p.e2
 
+    free_node(old_node);
+
+    free(farthest_pair);
+
     array_remove(node->entries, closest_entry); // this will be substitute by two new entries
+
+    if (closest_entry->indexes != NULL)
+    {
+        array_deep_clear(closest_entry->indexes);
+    }
 
     free_entry(closest_entry);
 
@@ -685,7 +706,8 @@ void merging_refinement(Node* node, PEntry* split_entries)
     old_node_1_entries = old_node_1->entries;
     old_node_2_entries = old_node_2->entries;
 
-    if(old_node_1->is_leaf != old_node_2->is_leaf) { // just to make sure everything is going ok
+    if(old_node_1->is_leaf != old_node_2->is_leaf)
+    { // just to make sure everything is going ok
         printf("ERROR: birch.c/merging_refinement(): \"Nodes at the same level must have same leaf status\"\n");
         exit(1);
     }
@@ -694,7 +716,7 @@ void merging_refinement(Node* node, PEntry* split_entries)
         // the two nodes cannot be merged into one (they will not fit)
         // in this case we simply redistribute them between p.e1 and p.e2
 
-        new_entry_1 = create_default_entry();
+        new_entry_1 = create_default_entry(split_entries->e1->dim);
         // note: in the CFNode construction below the last parameter is false
         // because a split cannot happen at the leaf level
         // (the only exception is when the root is first split, but that's treated separately)
@@ -702,19 +724,19 @@ void merging_refinement(Node* node, PEntry* split_entries)
         array_clear(new_node_1->entries);
         new_entry_1->child = new_node_1;
 
-        new_entry_2 = create_default_entry();
+        new_entry_2 = create_default_entry(split_entries->e1->dim);
         new_node_2 = old_node_2;
         array_clear(new_node_2->entries);
         new_entry_2->child = new_node_2;
 
         redistribute_entries_double(node, old_node_1_entries, old_node_2_entries, pentry, new_entry_1, new_entry_2);
-        /**/replace_closest_pair_with_new_entries(node, pentry, new_entry_1, new_entry_2);
+        replace_closest_pair_with_new_entries(node, pentry, new_entry_1, new_entry_2);
     }
     else
     {
         // if the the two closest entries can actually be merged into one single entry
 
-        new_entry = create_default_entry();
+        new_entry = create_default_entry(split_entries->e1->dim);
         // note: in the CFNode construction below the last parameter is false
         // because a split cannot happen at the leaf level
         // (the only exception is when the root is first split, but that's treated separately)
@@ -794,6 +816,7 @@ bool insert_entry(Node* node, Entry* entry) {
             // so that the parent node will be split as well to redistribute the "load"
             if(array_size(node->entries) > node->branching_factor)
             {
+                free(split_pair);
                 return false;
             }
             else
@@ -802,6 +825,7 @@ bool insert_entry(Node* node, Entry* entry) {
                 { // performs step 4 of insert process (see BIRCH paper, Section 4.3)
                     merging_refinement(node, split_pair);
                 }
+                free(split_pair);
                 return true;
             }
         }
@@ -810,6 +834,7 @@ bool insert_entry(Node* node, Entry* entry) {
     {
         // if  dist(closest,e) <= T, /e/ will be "absorbed" by /closest/
         update_entry(closest_entry, entry);
+        free_entry(entry);
         return true; // no split necessary at the parent level
     }
     else if(array_size(node->entries) < node->branching_factor)
@@ -842,4 +867,130 @@ Tree* create_tree
     tree->leaf_list = create_node(branching_factor, threshold, distance, true, apply_merging_refinement);
     tree->leaf_list->next_leaf = tree->root;
     return tree;
+}
+
+void free_tree_rec(Node* root)
+{
+    int i;
+    int entries_size;
+    Entry *curr_entry;
+
+    entries_size = array_size(root->entries);
+
+    for (i = 0; i < entries_size; ++i)
+    {
+        curr_entry = (Entry*) array_get(root->entries, i);
+        if (curr_entry->child != NULL)
+        {
+            free_tree_rec(curr_entry->child);
+        }
+
+        if (curr_entry->indexes != NULL)
+        {
+            array_deep_clear(curr_entry->indexes);
+        }
+        free_entry(curr_entry);
+    }
+
+    free_node(root);
+}
+
+void free_tree(Tree* tree)
+{
+    free_tree_rec(tree->root);
+    free_node(tree->leaf_list);
+    free(tree);
+}
+
+void split_root(Tree *tree) {
+    // the split happens by finding the two entries in this node that are the most far apart
+    // we then use these two entries as a "pivot" to redistribute the old entries into two new nodes
+
+    PEntry* pentry;
+    Entry* new_entry_1;
+    Entry* new_entry_2;
+    Node* new_node_1;
+    Node* new_node_2;
+    Node* new_root;
+
+    pentry = find_farthest_entry_pair(tree->root->entries, tree->root->distance);
+
+    new_entry_1 = create_default_entry(pentry->e1->dim);
+    new_node_1 = create_node(tree->root->branching_factor,
+                             tree->root->threshold, tree->root->distance,
+                             tree->root->is_leaf,
+                             tree->root->apply_merging_refinement);
+    new_entry_1->child = new_node_1;
+
+    new_entry_2 = create_default_entry(pentry->e1->dim);
+    new_node_2 = create_node(tree->root->branching_factor,
+                             tree->root->threshold, tree->root->distance,
+                             tree->root->is_leaf,
+                             tree->root->apply_merging_refinement);
+    new_entry_2->child = new_node_2;
+
+    // the new root that hosts the new entries
+    new_root = create_node(tree->root->branching_factor,
+                           tree->root->threshold,
+                           tree->root->distance, false,
+                           tree->root->apply_merging_refinement);
+    array_add(new_root->entries, new_entry_1);
+    array_add(new_root->entries, new_entry_2);
+
+    // this updates the pointers to the list of leaves
+    if(tree->root->is_leaf == true)
+    { // if root was a leaf
+        tree->leaf_list->next_leaf = new_node_1;
+        new_node_1->prev_leaf = tree->leaf_list;
+        new_node_1->next_leaf = new_node_2;
+        new_node_2->prev_leaf = new_node_1;
+    }
+
+    // redistributes the entries in the root between newEntry1 and newEntry2
+    // according to the distance to p.e1 and p.e2
+    redistribute_entries(tree->root, tree->root->entries, pentry, new_entry_1, new_entry_2);
+
+    // updates the root
+    free(pentry);
+    free_node(tree->root);
+    tree->root = new_root;
+}
+
+bool insert_entry_in_tree(Tree* tree, Entry* entry) {
+
+    bool dont_split;
+
+    dont_split = insert_entry(tree->root, entry);
+
+    if(dont_split == false) {
+        // if dontSplit is false, it means there was not enough space to insert the new entry in the tree,
+        // therefore wee need to split the root to make more room
+        split_root(tree);
+
+        if(tree->automatic_rebuild == true) {
+            // rebuilds the tree if we reached or exceeded memory limits
+            ///rebuild_if_above_mem_limit(tree);
+        }
+    }
+
+    return true; // after root is split, we are sure x was inserted correctly in the tree, and we return true
+}
+
+bool insert_point(Tree* tree, double *x, int dim, int index) {
+
+    Entry* entry;
+    entry = create_entry(x, dim, index);
+    return insert_entry_in_tree(tree, entry);
+}
+
+bool insert_default_point(Tree* tree, double* x, int dim)
+{
+    tree->instance_index++;
+
+    if(tree->automatic_rebuild == true && (tree->instance_index % tree->periodic_limit_check) == 0) {
+        // rebuilds the tree if we reached or exceeded memory limits
+        ///rebuild_if_above_mem_limit(tree);
+    }
+
+    return insert_point(tree, x, dim, tree->instance_index);
 }
