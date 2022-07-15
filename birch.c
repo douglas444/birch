@@ -258,7 +258,7 @@ bool entry_cmp(Entry *e1, Entry *e2)
 
 bool pentry_cmp(PEntry* p1, PEntry* p2)
 {
-    if (p1->e1 == p2->e1 && p1->e2 == p1->e2)
+    if (p1->e1 == p2->e1 && p1->e2 == p2->e2)
     {
         return true;
     }
