@@ -4,7 +4,7 @@ BIRCH (Balanced Iterative Reducing and Clustering Using Hierarchies) is an unsup
 
 This is a translation of jbirch ( https://github.com/perdisci/jbirch ) from Java to C.
 
-I ended up not needing this project, so I didn't have time to test all the functions. But the code is as legible as the original source, and there's no memory leaks, so it should be viable for anyone interested to continue the project.
+I ended up not needing this project, so I didn't have time to test everything. But the code is as legible as the original source, and there's no memory leaks, so it should be viable for anyone interested to continue the project.
 
 ## Requirements
 * gcc
@@ -26,7 +26,7 @@ gcc -Wall -O2  -c ./birch.c -o ./birch.o
 gcc -Wall -O2  -c ./smem.c -o ./smem.o 
 ```
 ```
-gcc  -o ./main ./main.o -s
+gcc  -o ./main ./main.o ./smem.o ./birch.o ./array.o -s
 ```
 
 ## How to run
