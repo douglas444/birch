@@ -4,3 +4,5 @@
 *~
 bin/
 obj/
+*.cscope_file_list
+output.csv

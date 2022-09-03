@@ -3,49 +3,9 @@
 #include <stdbool.h>
 #include <float.h>
 #include "birch.h"
-#include "array.h"
 #include "smem.h"
 
 #define INDEXES_INITIAL_SIZE 4
-
-struct entry
-{
-    int dim;
-    int n;
-    double* ls;
-    double* ss;
-    struct node* child;
-    Array* indexes;
-    int subcluster_id;
-};
-
-struct pentry
-{
-    struct entry* e1;
-    struct entry* e2;
-};
-
-struct node
-{
-    Array *entries;
-    int branching_factor;
-    double threshold;
-    bool is_leaf;
-    double (*distance)(struct entry*, struct entry*);
-    struct node *next_leaf;
-    struct node *prev_leaf;
-    bool apply_merging_refinement;
-};
-
-struct tree
-{
-    struct node* root;
-    struct node* leaf_list;
-    int instance_index;
-    bool automatic_rebuild;
-    long memory_limit;
-    long periodic_limit_check;
-};
 
 Entry* create_default_entry(int dim)
 {
@@ -76,7 +36,7 @@ Entry* create_entry
     entry->n = 1;
     entry->dim = dim;
 
-    smemcpy(entry->ls, x, entry->dim);
+    smemcpy(entry->ls, x, dim * sizeof(x));
 
     for (i = 0; i < entry->dim; i++)
     {
@@ -128,7 +88,7 @@ void update_entry(Entry *e1, Entry *e2)
 
     if (e1->ls == NULL)
     {
-        e1->ls = (double*) smemcpy(e1->ls, e2->ls, e2->dim);
+        e1->ls = (double*) smemcpy(e1->ls, e2->ls, e2->dim * sizeof(e2->ls));
     }
     else
     {
@@ -140,7 +100,7 @@ void update_entry(Entry *e1, Entry *e2)
 
     if(e1->ss == NULL)
     {
-        e1->ss = (double*) smemcpy(e1->ss, e2->ss, e2->dim);
+        e1->ss = (double*) smemcpy(e1->ss, e2->ss, e2->dim * sizeof(e2->ss));
     }
     else
     {
@@ -828,7 +788,6 @@ bool insert_entry(Node* node, Entry* entry) {
     {
         // if  dist(closest,e) <= T, /e/ will be "absorbed" by /closest/
         update_entry(closest_entry, entry);
-        free_entry(entry);
         return true; // no split necessary at the parent level
     }
     else if(array_size(node->entries) < node->branching_factor)
@@ -860,6 +819,7 @@ Tree* create_tree
     tree->root = create_node(branching_factor, threshold, distance, true, apply_merging_refinement);
     tree->leaf_list = create_node(branching_factor, threshold, distance, true, apply_merging_refinement);
     tree->leaf_list->next_leaf = tree->root;
+    tree->insert_count = 0;
     return tree;
 }
 
@@ -950,7 +910,7 @@ void split_root(Tree *tree) {
     tree->root = new_root;
 }
 
-bool insert_entry_in_tree(Tree* tree, Entry* entry) {
+void insert_entry_in_tree(Tree* tree, Entry* entry) {
 
     bool dont_split;
 
@@ -960,31 +920,58 @@ bool insert_entry_in_tree(Tree* tree, Entry* entry) {
         // if dontSplit is false, it means there was not enough space to insert the new entry in the tree,
         // therefore wee need to split the root to make more room
         split_root(tree);
-
-        if(tree->automatic_rebuild == true) {
-            // rebuilds the tree if we reached or exceeded memory limits
-            ///rebuild_if_above_mem_limit(tree);
-        }
     }
 
-    return true; // after root is split, we are sure x was inserted correctly in the tree, and we return true
+    tree->insert_count++;
 }
 
-bool insert_point(Tree* tree, double *x, int dim, int index) {
-
-    Entry* entry;
-    entry = create_entry(x, dim, index);
-    return insert_entry_in_tree(tree, entry);
-}
-
-bool insert_default_point(Tree* tree, double* x, int dim)
+Array* get_subclusters(Tree* tree)
 {
-    tree->instance_index++;
+    Array* subclusters = array_new(1);
+    Node* leaf = tree->leaf_list->next_leaf; // the first leaf is dummy!
 
-    if(tree->automatic_rebuild == true && (tree->instance_index % tree->periodic_limit_check) == 0) {
-        // rebuilds the tree if we reached or exceeded memory limits
-        ///rebuild_if_above_mem_limit(tree);
+    while(leaf != NULL)
+    {
+        if(!is_dummy(leaf))
+        {
+
+            for (int i = 0; i < array_size(leaf->entries); ++i)
+            {
+                Entry* entry = (Entry*) array_get(leaf->entries, i);
+                array_add(subclusters, array_clone(entry->indexes));
+            }
+        }
+        leaf = leaf->next_leaf;
     }
 
-    return insert_point(tree, x, dim, tree->instance_index);
+    return subclusters;
+}
+
+int* get_cluster_id_by_entry_index(Tree* tree)
+{
+    Node* leaf = tree->leaf_list->next_leaf; // the first leaf is dummy!
+
+    int* cluster_id_by_entry_index = smalloc(tree->insert_count * sizeof(int));
+    int cluster_id = 0;
+
+    while(leaf != NULL)
+    {
+        if(!is_dummy(leaf))
+        {
+
+            for (int i = 0; i < array_size(leaf->entries); ++i)
+            {
+                Entry* entry = (Entry*) array_get(leaf->entries, i);
+                for (int j = 0; j < array_size(entry->indexes); ++j)
+                {
+                    Integer* index = (Integer*) array_get(entry->indexes, j);
+                    cluster_id_by_entry_index[index->value] = cluster_id;
+                }
+                ++cluster_id;
+            }
+        }
+        leaf = leaf->next_leaf;
+    }
+
+    return cluster_id_by_entry_index;
 }
