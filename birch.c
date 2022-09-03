@@ -95,12 +95,6 @@ void free_entry(Entry *entry)
     entry->dim = 0;
     entry->n = 0;
 
-    Node* p = (Node*) 0x6054e0;
-    if (entry->child == p)
-    {
-        printf("opa");
-    }
-
     if (entry->ls != NULL)
     {
         free(entry->ls);
