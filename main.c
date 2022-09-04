@@ -118,6 +118,7 @@ int main(int argc, char *argv[])
         printf("6 - last_column_is_label: 0 or 1\n");
         printf("The line bellow is an example of a valid command line for running this program:\n");
         printf("./main 100 0.8 1 IRIS.csv 4 1\n");
+        exit(1);
     }
 
     int branching_factor = atoi(argv[1]);
