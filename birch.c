@@ -657,8 +657,8 @@ void merging_refinement(Node* node, PEntry* split_entries)
     old_node_1 = pentry->e1->child;
     old_node_2 = pentry->e2->child;
 
-    old_node_1_entries = old_node_1->entries;
-    old_node_2_entries = old_node_2->entries;
+    old_node_1_entries = array_clone(old_node_1->entries);
+    old_node_2_entries = array_clone(old_node_2->entries);
 
     if(old_node_1->is_leaf != old_node_2->is_leaf)
     { // just to make sure everything is going ok
@@ -871,7 +871,8 @@ void split_root(Tree *tree) {
 
     new_entry_1 = create_default_entry(pentry->e1->dim);
     new_node_1 = create_node(tree->root->branching_factor,
-                             tree->root->threshold, tree->root->distance,
+                             tree->root->threshold,
+                             tree->root->distance,
                              tree->root->is_leaf,
                              tree->root->apply_merging_refinement);
     new_entry_1->child = new_node_1;
@@ -912,9 +913,7 @@ void split_root(Tree *tree) {
 
 void insert_entry_in_tree(Tree* tree, Entry* entry) {
 
-    bool dont_split;
-
-    dont_split = insert_entry(tree->root, entry);
+    bool dont_split = insert_entry(tree->root, entry);
 
     if(dont_split == false) {
         // if dontSplit is false, it means there was not enough space to insert the new entry in the tree,

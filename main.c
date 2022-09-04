@@ -53,7 +53,7 @@ char* get_field(char* line, int num)
     return NULL;
 }
 
-Array* read_dataset_from_file(char* file_path, int dim, bool is_label_available)
+Array* read_dataset_from_file(char* file_path, int dim, bool last_column_is_label)
 {
     Array* samples = array_new(1);
     FILE* stream = fopen(file_path, "r");
@@ -80,7 +80,7 @@ Array* read_dataset_from_file(char* file_path, int dim, bool is_label_available)
             sscanf(field, "%lf", &sample->x[i]);
         }
 
-        if (is_label_available == true)
+        if (last_column_is_label == true)
         {
             sample->label = get_field(line, dim);
         }
@@ -104,15 +104,35 @@ double distance(Entry* e1, Entry* e2)
     return sqrt(dist);
 }
 
-int main()
+int main(int argc, char *argv[])
 {
-    int number_of_features = 4;
-    Array* samples = read_dataset_from_file("IRIS.csv", number_of_features, true);
+    if (argc < 7)
+    {
+        printf("Arguments missing!\n");
+        printf("The following parameters must be informed in the same order and separated by whitespace:\n");
+        printf("1 - branching_factor: integer value\n");
+        printf("2 - threshold: float value\n");
+        printf("3 - apply_merging_refinement: 0 or 1\n");
+        printf("4 - file_path: path to the dataset file\n");
+        printf("5 - number_of_features: integer value\n");
+        printf("6 - last_column_is_label: 0 or 1\n");
+        printf("The line bellow is an example of a valid command line for running this program:\n");
+        printf("./main 100 0.8 1 IRIS.csv 4 1\n");
+    }
+
+    int branching_factor = atoi(argv[1]);
+    double threshold = atof(argv[2]);
+    int apply_merging_refinement = atoi(argv[3]);
+    char* file_path = argv[4];
+    int number_of_features = atoi(argv[5]);
+    int last_column_is_label = atoi(argv[6]);
+
+    Array* samples = read_dataset_from_file(file_path, number_of_features, last_column_is_label == 1);
 
     Tree* tree;
     Entry* entry;
 
-    tree = create_tree(5, 0.5, distance, false);
+    tree = create_tree(branching_factor, threshold, distance, apply_merging_refinement == 1);
 
     for (int i = 0; i < array_size(samples); ++i)
     {
