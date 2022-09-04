@@ -27,16 +27,15 @@ gcc  -o ./main ./main.o ./smem.o ./birch.o ./array.o -s -lm
 
 ## How to run
 
-After compiling it, you can run the binary by executing the following command from the root of the project.
-
-The following parameters must be informed in this order and separated by whitespace:
+After compiling it, you can run the algorithm by executing the `main` binary with the following arguments, which must be informed in this order and separated by whitespace:
+~~~
 1º - branching_factor: integer value
 2º - threshold: float value
 3º - apply_merging_refinement: 0 or 1
 4º - file_path: path to the dataset file
 5º - number_of_features: integer value
 6º - last_column_is_label: 0 or 1
-
+~~~
 Example of valid command to run the program:
 
 ```
