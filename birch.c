@@ -735,7 +735,7 @@ void merging_refinement(Node* node, PEntry* split_entries)
     // merging refinement is done
 }
 
-bool insert_entry(Node* node, Entry* entry) {
+bool insert_entry(Node* node, Entry* entry, bool* hold_memory) {
 
     Entry* closest_entry;
     bool dont_split;
@@ -743,6 +743,7 @@ bool insert_entry(Node* node, Entry* entry) {
 
     if(array_size(node->entries) == 0)
     {
+        *hold_memory = true;
         array_add(node->entries, entry);
         return true;
     }
@@ -752,7 +753,7 @@ bool insert_entry(Node* node, Entry* entry) {
 
     if(closest_entry->child != NULL)
     {
-        dont_split = insert_entry(closest_entry->child, entry);
+        dont_split = insert_entry(closest_entry->child, entry, hold_memory);
 
         if(dont_split == true)
         {
@@ -794,11 +795,13 @@ bool insert_entry(Node* node, Entry* entry) {
     {
         // if /closest/ does not have children, and dist(closest,e) > T
         // if there is enough room in this node, we simply add e to it
+        *hold_memory = true;
         array_add(node->entries, entry);
         return true; // no split necessary at the parent level
     }
     else
     { // not enough space on this node
+        *hold_memory = true;
         array_add(node->entries, entry); // adds it momentarily to this node
         return false;   // returns false so that the parent entry will be split
     }
@@ -913,12 +916,19 @@ void split_root(Tree *tree) {
 
 void insert_entry_in_tree(Tree* tree, Entry* entry) {
 
-    bool dont_split = insert_entry(tree->root, entry);
+    bool hold_memory = false;
+    bool dont_split = insert_entry(tree->root, entry, &hold_memory);
 
-    if(dont_split == false) {
+    if (dont_split == false)
+    {
         // if dontSplit is false, it means there was not enough space to insert the new entry in the tree,
         // therefore wee need to split the root to make more room
         split_root(tree);
+    }
+    
+    if (hold_memory == false)
+    {
+        free_entry(entry);
     }
 
     tree->insert_count++;
