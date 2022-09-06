@@ -28,9 +28,7 @@ After compiling it, you can run the algorithm by executing the `main` binary wit
 
 [5] - Dataset Delimiters: String.
 
-[6] - Number of Features: An integer value.
-
-[7] - Ignore Last Column of the Dataset: 1 for yes, 0 for no.
+[6] - Ignore Last Column of the Dataset: 1 for yes, 0 for no.
 ~~~
 
 Example of valid command to run the program:
@@ -38,9 +36,7 @@ Example of valid command to run the program:
 ```
 ./main 100 0.8 1 IRIS.csv , 1
 ```
-
 Once the execution finishes, a `cbirch_output.csv` file will be created with the result of the clustering.
-
 
 ## Dataset file format
 
@@ -52,16 +48,9 @@ In order to test our implementation of BIRCH we compared it with Roberto Perdisc
 
 Important to notice that in the comparation we disabled jbirch's automatic rebuilding feature as it isn't supported by our implementation.
 
-Here's a [branch of jbirch](https://github.com/douglas444/jbirch) with instructions on how to run jbirch over the IRIS.csv dataset. Following we have the equivalent command lines to run the same experiment with our implementation:
-
-Command line that covers the case in which nodes cannot be merged into one in the mergingRefinement:
+The comparation was made using the `covtype.csv` dataset, which is avaiable in this [branch of jbirch](https://github.com/douglas444/jbirch) together with instructions on how to run jbirch over the dataset. Following we have the equivalent command lines to run the same experiment with our implementation (edit the dataset file path as needed):
 
 ```
-./main 5 0.5 1 IRIS.csv 4 1
-```
-
-Command line that covers the case in which nodes cannot be merged into one in the mergingRefinement:
-```
-./main 5 0.8 1 IRIS.csv 4 1
+./main5 0.5 1 covtype.csv , 1
 ```
 
