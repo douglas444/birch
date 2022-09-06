@@ -36,7 +36,7 @@ After compiling it, you can run the algorithm by executing the `main` binary wit
 Example of valid command to run the program:
 
 ```
-./main 100 0.8 1 IRIS.csv 4 1 ,\r\n
+./main 100 0.8 1 IRIS.csv , 1
 ```
 
 Once the execution finishes, a `cbirch_output.csv` file will be created with the result of the clustering.
