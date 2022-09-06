@@ -40,7 +40,8 @@ Once the execution finishes, a `cbirch_output.csv` file will be created with the
 
 ## Dataset file format
 
-Checkout the `IRIS.csv` file in the root of the project for more informations on the format of the dataset file.
+The program takes as input a `csv` file where new lines (\n) and carriage returns (\r) are interpreted as end of line symbols. The column's delimiter is passed as an argument as described in the [How to Run](#How to Run) section.
+Labels can only appear in the last column of the dataset, and if they are present, the last argument of the program must be set to 1.
 
 ## Comparation with Roberto Perdisci's jbirch
 
