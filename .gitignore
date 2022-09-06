@@ -6,6 +6,7 @@ bin/
 obj/
 *.cscope_file_list
 cbirch_output.csv
+covtype.csv
 *.o
 main
 ValgrindOut.xml
