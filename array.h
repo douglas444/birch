@@ -1,3 +1,6 @@
+#ifndef ARRAY_H
+#define ARRAY_H
+
 #include <stdlib.h>
 
 struct integer {
@@ -20,3 +23,6 @@ size_t array_size(Array *array);
 void array_clear(Array *array);
 Integer* new_integer(int value);
 void array_deep_clear(Array *array);
+
+#endif
+

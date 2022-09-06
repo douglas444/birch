@@ -7,14 +7,14 @@
 
 #define INDEXES_INITIAL_SIZE 4
 
-Entry* create_default_entry(int dim)
+Entry* entry_create_default(int dim)
 {
     Entry* entry = (Entry*) smalloc(sizeof(Entry));
 
     entry->dim = dim;
     entry->n = 0;
-    entry->ls = (double*) smalloc(sizeof(double) * dim);
-    entry->ss = (double*) smalloc(sizeof(double) * dim);
+    entry->ls = (double*) scalloc(dim, sizeof(double));
+    entry->ss = (double*) scalloc(dim, sizeof(double));
     entry->child = NULL;
     entry->indexes = NULL;
     entry->subcluster_id = -1;
@@ -22,7 +22,7 @@ Entry* create_default_entry(int dim)
     return entry;
 }
 
-Entry* create_entry
+Entry* entry_create
 (
     double* x,
     int dim,
@@ -31,7 +31,7 @@ Entry* create_entry
 {
     int i;
 
-    Entry* entry = create_default_entry(dim);
+    Entry* entry = entry_create_default(dim);
 
     entry->n = 1;
     entry->dim = dim;
@@ -86,28 +86,14 @@ void update_entry(Entry *e1, Entry *e2)
 
     e1->n += e2->n;
 
-    if (e1->ls == NULL)
+    for(i = 0; i < e1->dim; ++i)
     {
-        e1->ls = (double*) smemcpy(e1->ls, e2->ls, e2->dim * sizeof(e2->ls));
-    }
-    else
-    {
-        for(i = 0; i < e1->dim; ++i)
-        {
-            e1->ls[i] += e2->ls[i];
-        }
+        e1->ls[i] += e2->ls[i];
     }
 
-    if(e1->ss == NULL)
+    for(i = 0; i < e1->dim; i++)
     {
-        e1->ss = (double*) smemcpy(e1->ss, e2->ss, e2->dim * sizeof(e2->ss));
-    }
-    else
-    {
-        for(i = 0; i < e1->dim; i++)
-        {
-            e1->ss[i] += e2->ss[i];
-        }
+        e1->ss[i] += e2->ss[i];
     }
 
     if(e1->child == NULL)
@@ -168,8 +154,8 @@ Node* create_node
 bool is_dummy(Node* node)
 {
     if ((node->prev_leaf != NULL || node->next_leaf != NULL) &&
-        node->branching_factor == 0 && node->threshold == 0 &&
-        array_size(node->entries))
+            node->branching_factor == 0 && node->threshold == 0 &&
+            array_size(node->entries))
     {
         return true;
     }
@@ -192,32 +178,73 @@ PEntry* create_pentry(Entry* e1, Entry* e2)
     return pentry;
 }
 
+bool double_cmp(double* d1, double* d2, int n)
+{
+    for (int i = 0; i < n; ++i)
+    {
+        if (d1[i] != d2[i])
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool integer_cmp(Array* a1, Array* a2)
+{
+    for (int i = 0; i < array_size(a1); ++i)
+    {
+        if (((Integer*) array_get(a1, i))->value
+            != ((Integer*) array_get(a2, i))->value)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool entry_cmp(Entry *e1, Entry *e2)
 {
-    if (e1->child == e2->child &&
-        e1->dim == e2->dim &&
-        e1->indexes == e2->indexes &&
-        e1->ls == e2->ls &&
-        e1->n == e2->n &&
-        e1->ss == e2->ss &&
-        e1->subcluster_id == e2->subcluster_id)
-    {
-        return true;
-    }
-    else
-    {
+    if (e1->n != e2->n)
         return false;
-    }
+
+    if (e1->child != NULL && e2->child == NULL)
+        return false;
+
+    if (e1->child == NULL && e2->child != NULL)
+        return false;
+
+    if(e1->child != NULL && e1->child != e2->child)
+        return false;
+
+    if (e1->indexes == NULL && e2->indexes != NULL)
+        return false;
+
+    if (e1->indexes != NULL && e2->indexes == NULL)
+        return false;
+
+    if (double_cmp(e1->ls, e2->ls, e1->dim) == false)
+        return false;
+
+    if (double_cmp(e1->ss, e2->ss, e1->dim) == false)
+        return false;
+
+    if(e1->indexes != NULL && integer_cmp(e1->indexes, e2->indexes) == false)
+        return false;
+
+    return true;
 }
 
 bool pentry_cmp(PEntry* p1, PEntry* p2)
 {
-    if (p1->e1 == p2->e1 && p1->e2 == p2->e2)
+    if (entry_cmp(p1->e1, p2->e1) == true
+        && entry_cmp(p1->e2, p2->e2) == true)
     {
         return true;
     }
 
-    if (p1->e1 == p2->e2 && p1->e2 == p1->e1)
+    if (entry_cmp(p1->e1, p2->e2) == true
+        && entry_cmp(p1->e2, p2->e1) == true)
     {
         return true;
     }
@@ -333,50 +360,6 @@ PEntry* find_closest_entry_pair
     }
 
     return pentry;
-}
-
-int count_children_nodes(Node* node)
-{
-    int i;
-    int n;
-    Entry* curr_entry;
-
-    n = 0;
-
-    for (i = 0; i < array_size(node->entries); ++i)
-    {
-        curr_entry = (Entry*) array_get(node->entries, i);
-
-        if (curr_entry->child != NULL)
-        {
-            n++;
-            n += count_children_nodes(curr_entry->child);
-        }
-    }
-
-    return n;
-}
-
-int count_entries_in_children_nodes(Node* node)
-{
-    int i;
-    int n;
-    Entry* curr_entry;
-
-    n = 0;
-
-    for (i = 0; i < array_size(node->entries); ++i)
-    {
-        curr_entry = (Entry*) array_get(node->entries, i);
-
-        if (curr_entry->child != NULL)
-        {
-            n += array_size(curr_entry->child->entries);
-            n += count_children_nodes(curr_entry->child);
-        }
-    }
-
-    return n;
 }
 
 int find_closest_subcluster(Node* node, Entry* entry)
@@ -503,6 +486,20 @@ void redistribute_entries_merge
     }
 }
 
+void remove_entry(Array* entries, Entry* entry)
+{
+    int index = 0;
+    while (index < array_size(entries)
+           && entry_cmp(entry, array_get(entries, index)) == false)
+    {
+        ++index;
+    }
+    if (index < array_size(entries))
+    {
+        array_remove_by_index(entries, index);
+    }
+}
+
 PEntry* split_entry(Node* node, Entry* closest_entry)
 {
     // IF there was a child, but we could not insert the new entry without problems THAN
@@ -523,17 +520,18 @@ PEntry* split_entry(Node* node, Entry* closest_entry)
     old_entries = closest_entry->child->entries;
     farthest_pair = find_farthest_entry_pair(old_entries, node->distance);
 
-    new_entry_1 = create_default_entry(closest_entry->dim);
+    new_entry_1 = entry_create_default(closest_entry->dim);
     new_node_1 = create_node(node->branching_factor, node->threshold, node->distance, old_node->is_leaf, node->apply_merging_refinement);
     new_entry_1->child = new_node_1;
 
-    new_entry_2 = create_default_entry(closest_entry->dim);
+    new_entry_2 = entry_create_default(closest_entry->dim);
     new_node_2 = create_node(node->branching_factor, node->threshold, node->distance, old_node->is_leaf, node->apply_merging_refinement);
     new_entry_2->child = new_node_2;
 
 
     if(old_node->is_leaf)
-    { // we do this to preserve the pointers in the leafList
+    {
+        // we do this to preserve the pointers in the leafList
 
         prev = old_node->prev_leaf;
         next = old_node->next_leaf;
@@ -562,7 +560,7 @@ PEntry* split_entry(Node* node, Entry* closest_entry)
 
     free(farthest_pair);
 
-    array_remove(node->entries, closest_entry); // this will be substitute by two new entries
+    remove_entry(node->entries, closest_entry); // this will be substitute by two new entries
 
     if (closest_entry->indexes != NULL)
     {
@@ -645,7 +643,8 @@ void merging_refinement(Node* node, PEntry* split_entries)
     pentry = find_closest_entry_pair(node_entries, node->distance);
 
     if (pentry == NULL)
-    { // not possible to find a valid pair
+    {
+        // not possible to find a valid pair
         return;
     }
 
@@ -661,16 +660,18 @@ void merging_refinement(Node* node, PEntry* split_entries)
     old_node_2_entries = array_clone(old_node_2->entries);
 
     if(old_node_1->is_leaf != old_node_2->is_leaf)
-    { // just to make sure everything is going ok
+    {
+        // just to make sure everything is going ok
         printf("ERROR: birch.c/merging_refinement(): \"Nodes at the same level must have same leaf status\"\n");
         exit(1);
     }
 
-    if((array_size(old_node_1_entries) + array_size(old_node_2_entries)) > node->branching_factor) {
+    if((array_size(old_node_1_entries) + array_size(old_node_2_entries)) > node->branching_factor)
+    {
         // the two nodes cannot be merged into one (they will not fit)
         // in this case we simply redistribute them between p.e1 and p.e2
 
-        new_entry_1 = create_default_entry(split_entries->e1->dim);
+        new_entry_1 = entry_create_default(split_entries->e1->dim);
         // note: in the CFNode construction below the last parameter is false
         // because a split cannot happen at the leaf level
         // (the only exception is when the root is first split, but that's treated separately)
@@ -678,7 +679,7 @@ void merging_refinement(Node* node, PEntry* split_entries)
         array_clear(new_node_1->entries);
         new_entry_1->child = new_node_1;
 
-        new_entry_2 = create_default_entry(split_entries->e1->dim);
+        new_entry_2 = entry_create_default(split_entries->e1->dim);
         new_node_2 = old_node_2;
         array_clear(new_node_2->entries);
         new_entry_2->child = new_node_2;
@@ -690,17 +691,18 @@ void merging_refinement(Node* node, PEntry* split_entries)
     {
         // if the the two closest entries can actually be merged into one single entry
 
-        new_entry = create_default_entry(split_entries->e1->dim);
+        new_entry = entry_create_default(split_entries->e1->dim);
         // note: in the CFNode construction below the last parameter is false
         // because a split cannot happen at the leaf level
         // (the only exception is when the root is first split, but that's treated separately)
-        new_node = create_node(node->branching_factor, node->threshold, node->distance, node->apply_merging_refinement, old_node_1->is_leaf);
+        new_node = create_node(node->branching_factor, node->threshold, node->distance, old_node_1->is_leaf, node->apply_merging_refinement);
         new_entry->child = new_node;
 
         redistribute_entries_merge(node, old_node_1_entries, old_node_2_entries, new_entry);
 
         if (old_node_1->is_leaf && old_node_2->is_leaf)
-        { // this is done to maintain proper links in the leafList
+        {
+            // this is done to maintain proper links in the leafList
             if(old_node_1->prev_leaf != NULL)
             {
                 old_node_1->prev_leaf->next_leaf = new_node;
@@ -735,7 +737,8 @@ void merging_refinement(Node* node, PEntry* split_entries)
     // merging refinement is done
 }
 
-bool insert_entry(Node* node, Entry* entry, bool* hold_memory) {
+bool insert_entry(Node* node, Entry* entry, bool* hold_memory)
+{
 
     Entry* closest_entry;
     bool dont_split;
@@ -775,9 +778,11 @@ bool insert_entry(Node* node, Entry* entry, bool* hold_memory) {
                 return false;
             }
             else
-            { // splitting stops at this node
+            {
+                // splitting stops at this node
                 if(node->apply_merging_refinement)
-                { // performs step 4 of insert process (see BIRCH paper, Section 4.3)
+                {
+                    // performs step 4 of insert process (see BIRCH paper, Section 4.3)
                     merging_refinement(node, split_pair);
                 }
                 free(split_pair);
@@ -800,7 +805,8 @@ bool insert_entry(Node* node, Entry* entry, bool* hold_memory) {
         return true; // no split necessary at the parent level
     }
     else
-    { // not enough space on this node
+    {
+        // not enough space on this node
         *hold_memory = true;
         array_add(node->entries, entry); // adds it momentarily to this node
         return false;   // returns false so that the parent entry will be split
@@ -822,7 +828,6 @@ Tree* create_tree
     tree->root = create_node(branching_factor, threshold, distance, true, apply_merging_refinement);
     tree->leaf_list = create_node(branching_factor, threshold, distance, true, apply_merging_refinement);
     tree->leaf_list->next_leaf = tree->root;
-    tree->insert_count = 0;
     return tree;
 }
 
@@ -859,7 +864,8 @@ void free_tree(Tree* tree)
     free(tree);
 }
 
-void split_root(Tree *tree) {
+void split_root(Tree *tree)
+{
     // the split happens by finding the two entries in this node that are the most far apart
     // we then use these two entries as a "pivot" to redistribute the old entries into two new nodes
 
@@ -872,7 +878,7 @@ void split_root(Tree *tree) {
 
     pentry = find_farthest_entry_pair(tree->root->entries, tree->root->distance);
 
-    new_entry_1 = create_default_entry(pentry->e1->dim);
+    new_entry_1 = entry_create_default(pentry->e1->dim);
     new_node_1 = create_node(tree->root->branching_factor,
                              tree->root->threshold,
                              tree->root->distance,
@@ -880,7 +886,7 @@ void split_root(Tree *tree) {
                              tree->root->apply_merging_refinement);
     new_entry_1->child = new_node_1;
 
-    new_entry_2 = create_default_entry(pentry->e1->dim);
+    new_entry_2 = entry_create_default(pentry->e1->dim);
     new_node_2 = create_node(tree->root->branching_factor,
                              tree->root->threshold, tree->root->distance,
                              tree->root->is_leaf,
@@ -890,14 +896,16 @@ void split_root(Tree *tree) {
     // the new root that hosts the new entries
     new_root = create_node(tree->root->branching_factor,
                            tree->root->threshold,
-                           tree->root->distance, false,
+                           tree->root->distance,
+                           false,
                            tree->root->apply_merging_refinement);
     array_add(new_root->entries, new_entry_1);
     array_add(new_root->entries, new_entry_2);
 
     // this updates the pointers to the list of leaves
     if(tree->root->is_leaf == true)
-    { // if root was a leaf
+    {
+        // if root was a leaf
         tree->leaf_list->next_leaf = new_node_1;
         new_node_1->prev_leaf = tree->leaf_list;
         new_node_1->next_leaf = new_node_2;
@@ -914,8 +922,8 @@ void split_root(Tree *tree) {
     tree->root = new_root;
 }
 
-void insert_entry_in_tree(Tree* tree, Entry* entry) {
-
+void insert_entry_in_tree(Tree* tree, Entry* entry)
+{
     bool hold_memory = false;
     bool dont_split = insert_entry(tree->root, entry, &hold_memory);
 
@@ -925,13 +933,11 @@ void insert_entry_in_tree(Tree* tree, Entry* entry) {
         // therefore wee need to split the root to make more room
         split_root(tree);
     }
-    
+
     if (hold_memory == false)
     {
         free_entry(entry);
     }
-
-    tree->insert_count++;
 }
 
 Array* get_subclusters(Tree* tree)
@@ -956,18 +962,40 @@ Array* get_subclusters(Tree* tree)
     return subclusters;
 }
 
+int count_subclusters(Tree* tree)
+{
+    int count = 0;
+    Node* leaf = tree->leaf_list->next_leaf; // the first leaf is dummy!
+
+    while(leaf != NULL)
+    {
+        if(!is_dummy(leaf))
+        {
+            for (int i = 0; i < array_size(leaf->entries); ++i)
+            {
+                Entry* entry = (Entry*) array_get(leaf->entries, i);
+                for (int j = 0; j < array_size(entry->indexes); ++j)
+                {
+                    ++count;
+                }
+            }
+        }
+        leaf = leaf->next_leaf;
+    }
+
+    return count;
+}
+
 int* get_cluster_id_by_entry_index(Tree* tree)
 {
     Node* leaf = tree->leaf_list->next_leaf; // the first leaf is dummy!
-
-    int* cluster_id_by_entry_index = smalloc(tree->insert_count * sizeof(int));
+    int* cluster_id_by_entry_index = smalloc(count_subclusters(tree) * sizeof(int));
     int cluster_id = 0;
 
     while(leaf != NULL)
     {
         if(!is_dummy(leaf))
         {
-
             for (int i = 0; i < array_size(leaf->entries); ++i)
             {
                 Entry* entry = (Entry*) array_get(leaf->entries, i);

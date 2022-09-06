@@ -22,6 +22,25 @@ void* smalloc(size_t mem_size)
     }
 }
 
+void* scalloc(int num, size_t elem_size)
+/* ====================================
+ * Allocates memory
+ * ====================================
+ */
+{
+    void *mem_pos = (void*) calloc(num, elem_size);
+
+    if (mem_pos == NULL)
+    {
+        printf("ERROR: array.c/cmalloc(): \"Unable to allocate memory\"\n");
+        exit(1);
+    }
+    else
+    {
+        return mem_pos;
+    }
+}
+
 void* srealloc(void *mem_pos, size_t mem_size)
 /* ====================================
  * Reallocates memory

@@ -1,3 +1,6 @@
+#ifndef BIRCH_H
+#define BIRCH_H
+
 #include <stdbool.h>
 #include "array.h"
 
@@ -38,7 +41,6 @@ struct tree
     int insert_count;
 };
 
-
 typedef struct entry Entry;
 typedef struct node Node;
 typedef struct pentry PEntry;
@@ -47,7 +49,10 @@ typedef struct tree Tree;
 void free_tree(Tree* tree);
 Tree* create_tree(int branching_factor, double threshold, double (*distance)(struct entry*, struct entry*), bool apply_merging_refinement);
 void insert_entry_in_tree(Tree* tree, Entry* entry);
-Entry* create_entry(double* x, int dim, int index);
+Entry* entry_create(double* x, int dim, int index);
 Array* get_subclusters(Tree* tree);
 int* get_cluster_id_by_entry_index(Tree* tree);
 void free_entry(Entry *entry);
+
+#endif
+
