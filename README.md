@@ -16,7 +16,7 @@ gcc *.c -o main -lm
 ## To-do
 - [x] Compare with jbirch's [results](https://github.com/douglas444/jbirch/tree/reference-results)
 - [ ] Fix memory leaks
-- [ ] Improve efficiency of sample.c and array.c functions
+- [ ] Improve efficiency of sample.c's and array.c's functions
 - [ ] Make sure that [jbirch](https://github.com/perdisci/jbirch) is correct, since it is being used as reference for this implementation
 
 ## How to run
