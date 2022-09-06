@@ -49,7 +49,7 @@ In order to test our implementation of BIRCH we compared it with Roberto Perdisc
 
 Important to notice that in the comparation we disabled jbirch's automatic rebuilding feature as it isn't supported by our implementation.
 
-The comparation was made using the `covtype.csv` dataset, which is avaiable in this [branch of jbirch](https://github.com/douglas444/jbirch) together with instructions on how to run jbirch over the dataset. Following we have the equivalent command lines to run the same experiment with our implementation (edit the dataset file path as needed):
+The comparation was made using the `covtype.csv` dataset, which is avaiable in this [branch of jbirch](https://github.com/douglas444/jbirch/tree/reference-results) together with instructions on how to run jbirch over the dataset. Following we have the equivalent command lines to run the same experiment with our implementation (edit the dataset file path as needed):
 
 ```
 ./main5 0.5 1 covtype.csv , 1
