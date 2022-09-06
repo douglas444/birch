@@ -42,7 +42,7 @@ Once the execution finishes, a `cbirch_output.csv` file will be created with the
 
 Checkout the `IRIS.csv` file in the root of the project for more informations on the format of the dataset file.
 
-## More
+## Comparation with Roberto Perdisci's jbirch
 
 In order to test our implementation of BIRCH we compared it with Roberto Perdisci's implementation, called [jbirch](https://github.com/perdisci/jbirch).
 
@@ -54,3 +54,4 @@ The comparation was made using the `covtype.csv` dataset, which is avaiable in t
 ./main5 0.5 1 covtype.csv , 1
 ```
 
+Both implementation should output the same results.
