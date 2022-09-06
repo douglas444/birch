@@ -55,4 +55,4 @@ The comparation was made using the `covtype.csv` dataset, which is avaiable in t
 ./main5 0.5 1 covtype.csv , 1
 ```
 
-Both implementation should output the same results.
+Both implementations should output the same results.
