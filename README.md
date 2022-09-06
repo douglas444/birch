@@ -7,7 +7,7 @@ BIRCH (Balanced Iterative Reducing and Clustering Using Hierarchies) is an unsup
 
 ## Compilation
 
-To compile, execute each one of the following commands from the root of the project:
+To compile, execute the following command from the root of the project:
 
 ```
 gcc *.c -o main -lm
