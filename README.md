@@ -13,6 +13,12 @@ To compile, execute the following command from the root of the project:
 gcc *.c -o main -lm
 ```
 
+## To-do
+- [x] Compare with jbirch's results
+- [ ] Fix memory leaks
+- [ ] Improve efficiency of sample.c and array.c functions
+- [ ] Make sure that jbirch is correct, since it is being used as reference for this implementation
+
 ## How to run
 
 After compiling it, you can run the algorithm by executing the `main` binary with the following arguments, which must be informed in this order and separated by whitespace:
