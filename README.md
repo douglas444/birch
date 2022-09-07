@@ -16,26 +16,25 @@ gcc *.c -o main -lm
 ## To-do
 - [x] Compare with jbirch's [results](https://github.com/douglas444/jbirch/tree/reference-results)
 - [ ] Fix memory leaks
-- [ ] Improve efficiency of sample.c's and array.c's functions
+- [ ] Improve efficiency of the functions from sample.c and array.c
 - [ ] Make sure that [jbirch](https://github.com/perdisci/jbirch) is correct, since it is being used as reference for this implementation
+- [ ] Implement jbirch's automatic rebuilding feature
 
 ## How to run
 
 After compiling it, you can run the algorithm by executing the `main` binary with the following arguments, which must be informed in this order and separated by whitespace:
 
-~~~
-[1] - Branching Factor: An integer value.
+1. Branching Factor: An integer value.
 
-[2] - Threshold: A float value.
+2. Threshold: A float value.
 
-[3] - Apply Merging Refinement: 1 for yes, 0 for no.
+3. Apply Merging Refinement: 1 for yes, 0 for no.
 
-[4] - Dataset File Path: String.
+4. Dataset File Path: String.
 
-[5] - Dataset Delimiters: String.
+5. Dataset Delimiters: String.
 
-[6] - Ignore Last Column of the Dataset: 1 for yes, 0 for no.
-~~~
+6. Ignore Last Column of the Dataset: 1 for yes, 0 for no.
 
 Example of valid command to run the program:
 
