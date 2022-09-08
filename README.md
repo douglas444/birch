@@ -50,17 +50,12 @@ Labels can only appear in the last column of the dataset, and if they are presen
 
 ## Comparation with Roberto Perdisci's jbirch
 
-In order to test our implementation of BIRCH we compared it with Roberto Perdisci's implementation, called [jbirch](https://github.com/perdisci/jbirch).
+In order to test our implementation of BIRCH we compared it with Roberto Perdisci's implementation, called [jbirch](https://github.com/perdisci/jbirch). The comparation was made using the [covtype.csv](https://github.com/douglas444/arm-stream-framework/blob/main/arm-stream-exp/src/main/resources/covtype.csv) dataset. Important to notice that in the comparation we disabled jbirch's automatic rebuilding feature as it isn't supported by our implementation yet.
 
-Important to notice that in the comparation we disabled jbirch's automatic rebuilding feature as it isn't supported by our implementation yet.
-
-The comparation was made using the [covtype.csv](https://github.com/douglas444/arm-stream-framework/blob/main/arm-stream-exp/src/main/resources/covtype.csv) dataset. To run jbirch, please read the `README.md`file in this [branch](https://github.com/douglas444/jbirch/tree/reference-results) of the project. To run our implementation on the same dataset execute the following command line from the root of the project (edit the dataset file path as needed):
-
-```
-./main 5 0.5 1 covtype.csv , 1
-```
-
-For the test to be successful, both implementations should output the same results.
+To reproduce the tests, follow these steps:
+1. Run jbirch on the [covtype.csv](https://github.com/douglas444/arm-stream-framework/blob/main/arm-stream-exp/src/main/resources/covtype.csv) dataset by following the instructions in the `README.md` file of [this branch](https://github.com/douglas444/jbirch/tree/reference-results) of the project;
+2. Run our implementation, the C implementation, over the same dataset and with the same configurations by executing this command line from the root of the project (edit the dataset file path as needed): `./main 5 0.5 1 covtype.csv , 1`;
+3. Compare the output file of both implementations. For the test to be succesfull both files must have the same content.
 
 ## How to run Valgrind's memory check
 
