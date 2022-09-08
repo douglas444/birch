@@ -54,17 +54,12 @@ In order to test our implementation of BIRCH we compared it with Roberto Perdisc
 
 Important to notice that in the comparation we disabled jbirch's automatic rebuilding feature as it isn't supported by our implementation yet.
 
-The comparation was made using the `covtype.csv` dataset. To reproduce the test, please read the `README.md`file in this [branch of jbirch](https://github.com/douglas444/jbirch/tree/reference-results) for informations on how to obtain the dataset and run jbirch on it. To perform the equivalent experiment with our implementation, compile it and execute the following command lines from the root of the project (edit the dataset file path as needed).
+The comparation was made using the `covtype.csv` dataset. To reproduce the test, please read the `README.md`file in this [branch of jbirch](https://github.com/douglas444/jbirch/tree/reference-results) for informations on how to obtain the dataset and run jbirch on it. To run our implementation on the same dataset execute the following command line from the root of the project (edit the dataset file path as needed):
 
-With merge refinement:
 ```
 ./main 5 0.5 1 covtype.csv , 1
 ```
 
-Without merge refinement:
-```
-./main 5 0.5 0 covtype.csv , 1
-```
 For the test to be successful, both implementations should output the same results.
 
 ## How to run Valgrind's memory check
