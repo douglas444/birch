@@ -2,6 +2,13 @@
 
 BIRCH (Balanced Iterative Reducing and Clustering Using Hierarchies) is an unsupervised data mining algorithm which is used to perform hierarchical clustering over particularly large data-sets.
 
+## To-do
+- [x] Compare with jbirch's [results](https://github.com/douglas444/jbirch/tree/reference-results)
+- [ ] Fix memory leaks
+- [ ] Improve efficiency of the functions from sample.c and array.c
+- [ ] Make sure that [jbirch](https://github.com/perdisci/jbirch) is correct, since it is being used as reference for this implementation
+- [ ] Implement jbirch's automatic rebuilding feature
+
 ## Requirements
 * gcc
 
@@ -12,13 +19,6 @@ To compile, execute the following command from the root of the project:
 ```
 gcc *.c -o main -lm
 ```
-
-## To-do
-- [x] Compare with jbirch's [results](https://github.com/douglas444/jbirch/tree/reference-results)
-- [ ] Fix memory leaks
-- [ ] Improve efficiency of the functions from sample.c and array.c
-- [ ] Make sure that [jbirch](https://github.com/perdisci/jbirch) is correct, since it is being used as reference for this implementation
-- [ ] Implement jbirch's automatic rebuilding feature
 
 ## How to run
 
