@@ -52,7 +52,7 @@ Labels can only appear in the last column of the dataset, and if they are presen
 
 In order to test our implementation of BIRCH we compared it with Roberto Perdisci's implementation, called [jbirch](https://github.com/perdisci/jbirch).
 
-Important to notice that in the comparation we disabled jbirch's automatic rebuilding feature as it isn't supported by our implementation.
+Important to notice that in the comparation we disabled jbirch's automatic rebuilding feature as it isn't supported by our implementation yet.
 
 The comparation was made using the `covtype.csv` dataset. Please read the `README.md`file in this [branch of jbirch](https://github.com/douglas444/jbirch/tree/reference-results) for informations on how to obtain the dataset and run jbirch. Following we have the equivalent command lines to run the same experiment with our implementation (edit the dataset file path as needed).
 
