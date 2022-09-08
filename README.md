@@ -54,7 +54,7 @@ In order to test our implementation of BIRCH we compared it with Roberto Perdisc
 
 Important to notice that in the comparation we disabled jbirch's automatic rebuilding feature as it isn't supported by our implementation yet.
 
-The comparation was made using the `covtype.csv` dataset. Please read the `README.md`file in this [branch of jbirch](https://github.com/douglas444/jbirch/tree/reference-results) for informations on how to obtain the dataset and run jbirch. Following we have the equivalent command lines to run the same experiment with our implementation (edit the dataset file path as needed).
+The comparation was made using the `covtype.csv` dataset. To reproduce the test, please read the `README.md`file in this [branch of jbirch](https://github.com/douglas444/jbirch/tree/reference-results) for informations on how to obtain the dataset and run jbirch on it. To perform the equivalent experiment with our implementation, compile it and execute the following command lines from the root of the project (edit the dataset file path as needed).
 
 With merge refinement:
 ```
@@ -65,18 +65,17 @@ Without merge refinement:
 ```
 ./main 5 0.5 0 covtype.csv , 1
 ```
-
-Both implementations should output the same results.
+For the test to be successful, both implementations should output the same results.
 
 ## How to run Valgrind's memory check
 
 Valgrind must be installed in your machine.
 
-Compilation:
+To compile birch with ggdb3 flag execute the following command line from the root of the project:
 ```
 gcc -ggdb3 *.c -o main -lm
 ```
-Running the test:
+To run the test execute the following command line from the root of the project:
 ```
 valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ./main 100 0.8 1 IRIS.csv , 1
 ```
