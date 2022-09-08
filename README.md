@@ -54,7 +54,7 @@ In order to test our implementation of BIRCH we compared it with Roberto Perdisc
 
 Important to notice that in the comparation we disabled jbirch's automatic rebuilding feature as it isn't supported by our implementation yet.
 
-The comparation was made using the `covtype.csv` dataset. To reproduce the test, please read the `README.md`file in this [branch of jbirch](https://github.com/douglas444/jbirch/tree/reference-results) for informations on how to obtain the dataset and run jbirch on it. To run our implementation on the same dataset execute the following command line from the root of the project (edit the dataset file path as needed):
+The comparation was made using the [covtype.csv](https://github.com/douglas444/arm-stream-framework/blob/main/arm-stream-exp/src/main/resources/covtype.csv) dataset. To run jbirch, please read the `README.md`file in this [branch](https://github.com/douglas444/jbirch/tree/reference-results) of the project. To run our implementation on the same dataset execute the following command line from the root of the project (edit the dataset file path as needed):
 
 ```
 ./main 5 0.5 1 covtype.csv , 1
@@ -70,8 +70,7 @@ To compile birch with ggdb3 flag execute the following command line from the roo
 ```
 gcc -ggdb3 *.c -o main -lm
 ```
-To run the test execute the following command line from the root of the project:
+To run the valgrind over birch with the [covtype.csv](https://github.com/douglas444/arm-stream-framework/blob/main/arm-stream-exp/src/main/resources/covtype.csv) dataset execute the following command line from the root of the project (edit the dataset file path as needed):
 ```
-valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ./main 100 0.8 1 IRIS.csv , 1
+valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ./main 100 0.8 1 covtype.csv , 1
 ```
-
