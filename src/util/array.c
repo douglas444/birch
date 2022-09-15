@@ -1,7 +1,7 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include "smem.h"
-#include "array.h"
+#include <stdbool.h>
+#include "../../include/util/smem.h"
+#include "../../include/util/array.h"
 
 struct array
 {
@@ -79,7 +79,7 @@ void* array_get(Array *array, size_t index)
     {
         return array->backing[index];
     }
-    printf("ERROR: array.c/get_array(): \"Array index out of bounds\"\n");
+    printf("ERROR: array.c/array_get(): \"Array index out of bounds\"\n");
     exit(1);
 }
 
@@ -91,7 +91,7 @@ void array_set(Array *array, size_t index, void *data)
     }
     else
     {
-        printf("ERROR: array.c/get_array(): \"Array index out of bounds\"\n");
+        printf("ERROR: array.c/array_set(): \"Array index out of bounds\"\n");
         exit(1);
     }
 }
@@ -126,7 +126,7 @@ void* array_remove_by_index(Array *array, size_t index)
 
     if (index >= array->used)
     {
-        printf("ERROR: array.c/get_array(): \"Array index out of bounds\"\n");
+        printf("ERROR: array.c/array_remove_by_index(): \"Array index out of bounds\"\n");
         exit(1);
     }
 
@@ -148,9 +148,9 @@ void array_clear(Array *array)
     int size;
 
     size = array->used;
-    for (i = 0; i < size; ++i)
+    for (i = size - 1; i >= 0; --i)
     {
-        array_remove_by_index(array, 0);
+        array_remove_by_index(array, i);
     }
 }
 
@@ -161,16 +161,9 @@ void array_deep_clear(Array *array)
     void *pointer;
 
     size = array->used;
-    for (i = 0; i < size; ++i)
+    for (i = size - 1; i >= 0; --i)
     {
-        pointer = array_remove_by_index(array, 0);
+        pointer = array_remove_by_index(array, i);
         free(pointer);
     }
-}
-
-Integer* new_integer(int value)
-{
-    Integer* integer = (Integer*) smalloc(sizeof(Integer));
-    integer->value = value;
-    return integer;
 }
