@@ -46,12 +46,13 @@ void print_arguments_message()
 {
     printf("\n>>> Invalid numbers of arguments! <<<\n");
     printf("\nThe following parameters must be informed in this order and separated by whitespace:\n");
-    printf("\n1. Branching Factor: An integer value.\n");
-    printf("\n2. Threshold: A float value.\n");
-    printf("\n3. Apply Merging Refinement: 1 for yes, 0 for no.\n");
-    printf("\n4. Dataset File Path: String.\n");
-    printf("\n5. Dataset Delimiters: String.\n");
-    printf("\n6. Ignore Last Column of the Dataset: 1 for yes, 0 for no.\n");
+    printf("\n1. Branching Factor: An integer value;\n");
+    printf("\n2. Threshold: A float value;\n");
+    printf("\n3. Apply Merging Refinement: 1 for yes, 0 for no;\n");
+    printf("\n4. Dataset File Path: String;\n");
+    printf("\n5. Dataset Delimiters: String;\n");
+    printf("\n6. Ignore Last Column of the Dataset: 1 for yes, 0 for no;\n");
+    printf("\n7. Output File Name: String.\n");
     printf("\n\nThe line bellow is an example of a valid command line for running this program:\n");
     printf("./main 100 0.8 1 IRIS.csv , 1\n\n");
 }
