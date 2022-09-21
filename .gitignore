@@ -2,7 +2,6 @@
 *.layout
 *.depend
 *~
-bin/*
 obj/
 .idea/
 *.cscope_file_list
