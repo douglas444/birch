@@ -54,7 +54,7 @@ void print_arguments_message()
     printf("\n6. Ignore Last Column of the Dataset: 1 for yes, 0 for no;\n");
     printf("\n7. Output File Name: String.\n");
     printf("\n\nThe line bellow is an example of a valid command line for running this program:\n");
-    printf("./main 100 0.8 1 IRIS.csv , 1\n\n");
+    printf("./main 100 0.8 1 IRIS.csv , 1 output.csv\n\n");
 }
 
 
