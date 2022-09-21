@@ -64,7 +64,7 @@ this command line from the root of the project (edit the dataset file path as ne
 `./bin/main 5 0.5 1 covtype.csv , 1 cbirch_output.csv`;
 3. Compare the output file of both implementations. For the test to be succesfull both files must have the same content.
 
-## How to run Valgrind's memory check
+## How to Run Valgrind's Memory Check
 
 Valgrind must be installed in your machine.
 
@@ -78,4 +78,5 @@ dataset execute the following command line from the root of the project (edit th
 ```
 valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ./bin/main 100 0.8 1 covtype.csv , 1
 ```
-We recommend using the covtype dataset because it triggers all the functions of the implementation.
+We recommend using the covtype dataset in the Valgrind tests, because this dataset triggers all the functions of the 
+implementation.
