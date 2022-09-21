@@ -60,7 +60,7 @@ void print_arguments_message()
 
 int main(int argc, char* argv[])
 {
-    if (argc < 7)
+    if (argc < 8)
     {
         print_arguments_message();
         exit(1);
