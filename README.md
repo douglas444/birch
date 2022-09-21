@@ -54,10 +54,10 @@ section. Labels can only appear in the last column of the dataset. Make sure to 
 ## Comparison with Roberto Perdisci's jbirch
 
 In order to test our implementation of BIRCH we compared it with Roberto Perdisci's implementation, called 
-[jbirch](https://github.com/perdisci/jbirch). The comparation was made using the 
+[jbirch](https://github.com/perdisci/jbirch). The comparison was made using the 
 [covtype.csv](https://github.com/douglas444/arm-stream-framework/blob/main/arm-stream-exp/src/main/resources/covtype.csv) 
 dataset, which is able to cover all the relevant code from both implementations. Important to notice that in the 
-comparation we disabled jbirch's automatic rebuilding feature as it isn't supported by our implementation yet.
+comparison we disabled jbirch's automatic rebuilding feature as it isn't supported by our implementation yet.
 
 To reproduce the tests, follow these steps:
 1. Run jbirch on the [covtype.csv](https://github.com/douglas444/arm-stream-framework/blob/main/arm-stream-exp/src/main/resources/covtype.csv) dataset by following the instructions in the `README.md` file of [this branch](https://github.com/douglas444/jbirch/tree/reference-results) of the project;
