@@ -6,6 +6,8 @@ used to perform hierarchical clustering over particularly large data-sets.
 ## To-do
 - [x] Compare with jbirch's [results](https://github.com/douglas444/jbirch/tree/reference-results);
 - [ ] Fix memory leaks;
+- [ ] Replace array.c and integer.c by [c-vector](https://github.com/eteran/c-vector);
+- [ ] Replace instance.c by [csv-fast-reader](https://github.com/jandoczy/csv-fast-reader);
 - [ ] Make sure that [jbirch](https://github.com/perdisci/jbirch) is correct, since it is being used as reference for 
 this implementation;
 - [ ] Implement jbirch's automatic rebuilding feature.
