@@ -14,7 +14,7 @@ struct tree
 typedef struct tree Tree;
 
 int* tree_get_cluster_id_by_instance_index(Tree* tree);
-Tree* tree_create(int dimensionality, int branching_factor, double threshold, double (*distance)(Entry*, Entry*), bool apply_node_merging_refinement);
+Tree* tree_create(int dimensionality, int branching_factor, double threshold, double (*distance)(Entry*, Entry*), bool apply_merging_refinement);
 int tree_insert(Tree* tree, double* sample);
 void tree_free(Tree* tree);
 

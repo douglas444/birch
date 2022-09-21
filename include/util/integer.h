@@ -9,7 +9,7 @@ struct integer {
 };
 typedef struct integer Integer;
 
-Integer* integer_new(int value);
+Integer* integer_create(int value);
 bool integer_array_cmp(Array* a1, Array* a2);
 
 #endif

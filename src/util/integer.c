@@ -2,7 +2,7 @@
 #include "../../include/util/smem.h"
 
 
-Integer* integer_new(int value)
+Integer* integer_create(int value)
 {
     Integer* integer = (Integer*) smalloc(sizeof(Integer));
     integer->value = value;

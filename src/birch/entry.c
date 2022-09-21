@@ -45,8 +45,8 @@ Entry* entry_create
         entry->ss[i] = entry->ls[i] * entry->ls[i];
     }
 
-    entry->indexes = array_new(INDEXES_INITIAL_SIZE);
-    array_add(entry->indexes, integer_new(index));
+    entry->indexes = array_create(INDEXES_INITIAL_SIZE);
+    array_add(entry->indexes, integer_create(index));
 
     return entry;
 

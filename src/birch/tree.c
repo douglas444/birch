@@ -14,14 +14,14 @@ Tree* tree_create
     int branching_factor,
     double threshold,
     double (*distance)(struct entry*, struct entry*),
-    bool apply_node_merging_refinement
+    bool apply_merging_refinement
 )
 {
     Tree* tree = (Tree*) smalloc(sizeof(Tree));
 
     tree->dimensionality = dimensionality;
-    tree->root = node_create(branching_factor, threshold, distance, true, apply_node_merging_refinement);
-    tree->leaf_list = node_create(branching_factor, threshold, distance, true, apply_node_merging_refinement);
+    tree->root = node_create(branching_factor, threshold, distance, true, apply_merging_refinement);
+    tree->leaf_list = node_create(branching_factor, threshold, distance, true, apply_merging_refinement);
     tree->leaf_list->next_leaf = tree->root;
     tree->instance_index = 0;
 
@@ -108,14 +108,14 @@ void tree_split_root(Tree *tree)
                              tree->root->threshold,
                              tree->root->distance,
                              tree->root->is_leaf,
-                             tree->root->apply_node_merging_refinement);
+                             tree->root->apply_merging_refinement);
     new_entry_1->child = new_node_1;
 
     new_entry_2 = entry_create_default(pair->e1->dim);
     new_node_2 = node_create(tree->root->branching_factor,
                              tree->root->threshold, tree->root->distance,
                              tree->root->is_leaf,
-                             tree->root->apply_node_merging_refinement);
+                             tree->root->apply_merging_refinement);
     new_entry_2->child = new_node_2;
 
     // the new root that hosts the new entries
@@ -123,7 +123,7 @@ void tree_split_root(Tree *tree)
                            tree->root->threshold,
                            tree->root->distance,
                            false,
-                           tree->root->apply_node_merging_refinement);
+                           tree->root->apply_merging_refinement);
     array_add(new_root->entries, new_entry_1);
     array_add(new_root->entries, new_entry_2);
 
@@ -150,7 +150,7 @@ void tree_split_root(Tree *tree)
 
 Array* tree_get_subclusters(Tree* tree)
 {
-    Array* subclusters = array_new(1);
+    Array* subclusters = array_create(1);
     Node* leaf = tree->leaf_list->next_leaf; // the first leaf is dummy!
 
     while(leaf != NULL)

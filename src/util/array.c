@@ -9,7 +9,7 @@ struct array
     size_t size;
 };
 
-Array* array_new(size_t initial_size)
+Array* array_create(size_t initial_size)
 {
     Array *array = (Array*) smalloc(sizeof(Array));
     array->backing = smalloc(sizeof(void*) * initial_size);
