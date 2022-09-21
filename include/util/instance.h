@@ -4,8 +4,8 @@
 #include <stdbool.h>
 #include "array.h"
 
-double* read_instance(char* line, int dimensionality, char* delimiters);
-int calculate_dimensionality(char* line, char* delimiters, bool last_column_is_label);
+double* instance_read(char* line, int dimensionality, char* delimiters);
+int instance_calculate_dimensionality(char* line, char* delimiters, bool last_column_is_label);
 
 #endif
 

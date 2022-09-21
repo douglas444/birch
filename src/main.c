@@ -87,13 +87,13 @@ int main(int argc, char* argv[])
 
     char line[1024];
     fgets(line, 1024, stream);
-    int dimensionality = calculate_dimensionality(line, delimiters, last_column_is_label);
+    int dimensionality = instance_calculate_dimensionality(line, delimiters, last_column_is_label);
     Tree* tree = tree_create(dimensionality, branching_factor, threshold, distance, apply_node_merging_refinement == 1);
     Array* instances_indexes = array_new(1);
 
     do {
 
-        double* instance = read_instance(line, dimensionality, delimiters);
+        double* instance = instance_read(line, dimensionality, delimiters);
         int instance_index = tree_insert(tree, instance);
         array_add(instances_indexes, integer_new(instance_index));
 

@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdbool.h>
 #include "../../include/util/smem.h"
 #include "../../include/util/array.h"
 

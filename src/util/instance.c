@@ -22,7 +22,7 @@ char* get_field(char* line, char* delimiters, int num)
     return NULL;
 }
 
-double* read_instance(char* line, int dimensionality, char* delimiters)
+double* instance_read(char* line, int dimensionality, char* delimiters)
 {
     double* sample = smalloc(sizeof(double*) * dimensionality);
 
@@ -36,7 +36,7 @@ double* read_instance(char* line, int dimensionality, char* delimiters)
     return sample;
 }
 
-int calculate_dimensionality(char* line, char* delimiters, bool last_column_is_label)
+int instance_calculate_dimensionality(char* line, char* delimiters, bool last_column_is_label)
 {
     char *p;
     int count = 0;
