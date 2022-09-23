@@ -83,5 +83,4 @@ dataset execute the following command line from the root of the project (edit th
 ```
 valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ./bin/main 100 0.8 1 covtype.csv , 1
 ```
-We recommend using the covtype dataset in the Valgrind tests, because this dataset triggers all the functions of the 
-implementation.
+The covtype dataset triggers all the functions of the implementation, allowing Valgrind to test every piece of code.
